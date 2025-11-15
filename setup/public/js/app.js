@@ -191,6 +191,9 @@ function setupWizard() {
 
                 const buildResult = await buildResponse.json();
                 this.deploymentLogs += buildResult.logs || buildResult.message;
+                if (buildResult.errors) {
+                    this.deploymentLogs += '\n' + buildResult.errors;
+                }
 
                 // Start services
                 this.deploymentLogs += '\nStarting services...\n';
@@ -205,6 +208,12 @@ function setupWizard() {
 
                 const startResult = await startResponse.json();
                 this.deploymentLogs += startResult.logs || startResult.message;
+                if (startResult.errors) {
+                    this.deploymentLogs += '\nErrors:\n' + startResult.errors;
+                }
+
+                // Show more details if available
+                console.log('Start result:', startResult);
 
                 if (startResult.success) {
                     this.deploymentLogs += '\n\n✓ Deployment completed successfully!\n';
