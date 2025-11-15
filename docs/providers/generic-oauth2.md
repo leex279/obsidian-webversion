@@ -2,9 +2,20 @@
 
 This guide covers configuring any OAuth2 or OpenID Connect (OIDC) compatible identity provider with Obsidian Remote.
 
+## Architecture Overview
+
+**OAuth2-Proxy is a standalone reverse proxy** that sits in front of Obsidian Remote as an authentication layer. It is **not a native feature** of Obsidian Remote itself, but rather a separate service deployed in the same Docker Compose stack.
+
+**Deployment Pattern:**
+```
+Internet → Caddy (HTTPS) → OAuth2-Proxy (Authentication) → Obsidian Remote (Application)
+```
+
+OAuth2-Proxy intercepts all requests, validates authentication, and only forwards authenticated requests to Obsidian Remote. This separation allows Obsidian Remote to focus on note-taking while OAuth2-Proxy handles all authentication concerns.
+
 ## Supported Providers
 
-Any provider implementing OAuth2 or OIDC standard works with OAuth2-Proxy:
+Any identity provider implementing OAuth2 or OIDC standards can work when placed in front of Obsidian Remote via OAuth2-Proxy (or equivalent authentication proxies like Nginx Proxy Manager with auth modules):
 
 ### Self-Hosted Open Source
 - **Authelia** - Lightweight SSO with MFA

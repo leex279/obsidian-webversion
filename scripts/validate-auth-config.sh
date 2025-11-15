@@ -55,25 +55,40 @@ check_optional() {
 echo "=== Required Configuration ==="
 check_required "DOMAIN" "$DOMAIN"
 check_required "CADDY_EMAIL" "$CADDY_EMAIL"
+check_required "AUTH_REDIRECT_URL" "$AUTH_REDIRECT_URL"
 check_required "AUTH_OIDC_ISSUER_URL" "$AUTH_OIDC_ISSUER_URL"
 check_required "AUTH_CLIENT_ID" "$AUTH_CLIENT_ID"
 check_required "AUTH_CLIENT_SECRET" "$AUTH_CLIENT_SECRET"
 check_required "AUTH_COOKIE_SECRET" "$AUTH_COOKIE_SECRET"
+check_required "AUTH_EMAIL_DOMAINS" "$AUTH_EMAIL_DOMAINS"
 
 echo ""
 echo "=== Optional Configuration ==="
-check_optional "AUTH_EMAIL_DOMAINS" "$AUTH_EMAIL_DOMAINS" "Set to '*' to allow all domains, or specify comma-separated allowed domains"
-check_optional "AUTH_ALLOWED_USERS" "$AUTH_ALLOWED_USERS" "Leave empty to allow all authenticated users, or specify comma-separated email addresses"
+check_optional "AUTH_PROVIDER_DISPLAY_NAME" "$AUTH_PROVIDER_DISPLAY_NAME" "Set provider name shown on login page (e.g., 'Google', 'Company SSO')"
+check_optional "AUTH_ALLOWED_USERS" "$AUTH_ALLOWED_USERS" "Leave empty to allow all users from AUTH_EMAIL_DOMAINS, or specify comma-separated email addresses"
 
-# Validate cookie secret length
+# Validate cookie secret length using Bash parameter expansion
 if [ -n "$AUTH_COOKIE_SECRET" ]; then
-    SECRET_LENGTH=$(echo -n "$AUTH_COOKIE_SECRET" | wc -c)
-    if [ $SECRET_LENGTH -lt 32 ]; then
-        echo -e "${RED}✗ AUTH_COOKIE_SECRET is too short (must be at least 32 characters)${NC}"
+    if [ "${#AUTH_COOKIE_SECRET}" -lt 32 ]; then
+        echo -e "${RED}✗ AUTH_COOKIE_SECRET is too short (must be at least 32 characters, got ${#AUTH_COOKIE_SECRET})${NC}"
         ((ERRORS++))
     else
-        echo -e "${GREEN}✓ AUTH_COOKIE_SECRET length is valid${NC}"
+        echo -e "${GREEN}✓ AUTH_COOKIE_SECRET length is valid (${#AUTH_COOKIE_SECRET} characters)${NC}"
     fi
+fi
+
+# Validate AUTH_EMAIL_DOMAINS is not wildcard
+if [ "$AUTH_EMAIL_DOMAINS" = "*" ]; then
+    echo -e "${YELLOW}⚠ AUTH_EMAIL_DOMAINS is set to wildcard (*) - this allows ANY email domain${NC}"
+    echo -e "  ${YELLOW}SECURITY WARNING: Recommended to restrict to specific domain(s) in production${NC}"
+    ((WARNINGS++))
+fi
+
+# Validate redirect URL matches HTTPS for production
+if [[ "$AUTH_REDIRECT_URL" =~ ^http:// ]] && [ "$AUTH_COOKIE_SECURE" != "false" ]; then
+    echo -e "${YELLOW}⚠ AUTH_REDIRECT_URL uses HTTP but AUTH_COOKIE_SECURE is not set to false${NC}"
+    echo -e "  ${YELLOW}OAuth callbacks may fail. Set AUTH_COOKIE_SECURE=false for local development${NC}"
+    ((WARNINGS++))
 fi
 
 # Validate OIDC Issuer URL format

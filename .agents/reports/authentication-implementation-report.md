@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Successfully implemented a production-ready OAuth2/OIDC authentication layer for Obsidian Remote using OAuth2-Proxy and Caddy reverse proxy. The implementation supports multiple identity providers (Supabase, Google, GitHub, Keycloak, etc.) and includes comprehensive documentation, helper scripts, and security validation.
+Successfully implemented a production-ready OAuth2/OIDC authentication layer for Obsidian Remote using OAuth2-Proxy and Caddy reverse proxy. The implementation is configured with Supabase Auth as the default provider but supports any OAuth2/OIDC-compliant identity provider (Google, GitHub, Keycloak, Authelia, Authentik, etc.) through environment variable configuration. Includes comprehensive documentation, helper scripts, and security validation.
 
 ## Implementation Checklist
 
@@ -19,10 +19,11 @@ Successfully implemented a production-ready OAuth2/OIDC authentication layer for
 
 ### ✅ Phase 2: OAuth2-Proxy Service Implementation
 - [x] Created docker-compose.auth.yml with OAuth2-Proxy service
-- [x] Configured OIDC provider support
+- [x] Configured generic OIDC provider support (Supabase as default example)
 - [x] Set up cookie secret management
 - [x] Defined network connectivity
 - [x] Added healthcheck for OAuth2-Proxy
+- [x] Made provider display name configurable via AUTH_PROVIDER_DISPLAY_NAME
 
 ### ✅ Phase 3: Reverse Proxy Integration
 - [x] Updated Caddyfile with forward auth configuration
