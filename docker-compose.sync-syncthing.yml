@@ -1,0 +1,47 @@
+# Syncthing Peer-to-Peer Vault Sync Service
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.sync-syncthing.yml up -d
+#
+# Important: Configure Syncthing GUI authentication before exposing to network!
+# Access GUI at: http://localhost:8384
+
+services:
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: obsidian-sync-syncthing
+    hostname: obsidian-sync
+    restart: unless-stopped
+
+    # Host network mode REQUIRED for LAN peer discovery
+    # Bridge mode will break local device detection and reduce transfer speeds
+    network_mode: host
+
+    volumes:
+      # Shared vault directory with Obsidian container
+      - ./vaults:/vaults
+      # Syncthing-specific configuration
+      - ./syncthing-config:/config
+
+    environment:
+      # User/Group IDs - MUST match Obsidian container for file permissions
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Etc/UTC}
+
+      # Optional: Custom Syncthing home directory
+      # - STGUIADDRESS=0.0.0.0:8384  # Default, listens on all interfaces
+
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8384/rest/noauth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# Note: Since using host network mode, ports are not explicitly mapped
+# Syncthing uses:
+#   - 8384/tcp:  Web GUI
+#   - 22000/tcp: File transfer listening port
+#   - 22000/udp: File transfer listening port
+#   - 21027/udp: Protocol discovery

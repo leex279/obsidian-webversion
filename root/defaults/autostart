@@ -1,1 +1,4 @@
-sudo /squashfs-root/obsidian --no-sandbox --no-xshm --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer
+while true; do
+  LD_LIBRARY_PATH=/squashfs-root /squashfs-root/obsidian --no-sandbox --no-xshm --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer
+  sleep 2
+done

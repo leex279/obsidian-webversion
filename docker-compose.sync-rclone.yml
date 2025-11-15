@@ -1,0 +1,66 @@
+# rclone Cloud Provider Vault Sync Service
+#
+# Supports: Google Drive, Dropbox, OneDrive, Box, pCloud, and 40+ providers
+#
+# Setup Required:
+#   1. Generate rclone config: docker-compose -f docker-compose.sync-rclone.yml run --rm rclone config
+#   2. Configure provider OAuth credentials interactively
+#   3. Start service: docker-compose -f docker-compose.yml -f docker-compose.sync-rclone.yml up -d
+#
+# Documentation: docs/sync-rclone-guide.md
+
+services:
+  rclone:
+    image: rclone/rclone:latest
+    container_name: obsidian-sync-rclone
+    restart: unless-stopped
+
+    # Mount cloud storage to /vaults for Obsidian access
+    # Note: This is a TEMPLATE - actual mount command depends on provider
+    command: mount ${RCLONE_REMOTE}:${RCLONE_REMOTE_PATH} /vaults \
+      --config /config/rclone/rclone.conf \
+      --vfs-cache-mode writes \
+      --allow-other \
+      --daemon
+
+    volumes:
+      # Shared vault directory with Obsidian container
+      - ./vaults:/vaults:shared
+      # rclone configuration file location
+      - ./rclone-config:/config/rclone
+
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Etc/UTC}
+
+      # Provider configuration (set in .env.sync)
+      # - RCLONE_REMOTE=gdrive        # Remote name from rclone config
+      # - RCLONE_REMOTE_PATH=/vaults  # Path within cloud storage
+
+    # FUSE device required for mounting
+    devices:
+      - /dev/fuse
+
+    # Capabilities required for FUSE mounts
+    cap_add:
+      - SYS_ADMIN
+
+    security_opt:
+      - apparmor:unconfined
+
+    healthcheck:
+      # Check if mount point is accessible
+      test: ["CMD-SHELL", "test -d /vaults && ls /vaults > /dev/null 2>&1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# IMPORTANT: This is a template configuration
+# Actual implementation requires:
+#   1. Running interactive rclone config to set up provider credentials
+#   2. Choosing appropriate VFS cache mode based on provider performance
+#   3. Adjusting mount flags based on provider capabilities
+#
+# See docs/sync-rclone-guide.md for provider-specific setup instructions

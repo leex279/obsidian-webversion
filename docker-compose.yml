@@ -1,0 +1,52 @@
+services:
+  obsidian:
+    image: 'obsidian-remote:local-autorestart'
+    container_name: obsidian-remote
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./vaults:/vaults
+      - ./config:/config
+    environment:
+      # Core Settings
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+
+      # Web Interface Configuration
+      - CUSTOM_PORT=8080
+      - CUSTOM_HTTPS_PORT=8443
+      - CUSTOM_USER=
+      - PASSWORD=
+      - SUBFOLDER=
+      - TITLE=Obsidian Remote
+      - FM_HOME=/vaults
+
+      # Optional: Enable git support for obsidian-git plugin
+      # - DOCKER_MODS=linuxserver/mods:universal-git
+
+      # Optional: Language Support (requires universal-package-install mod)
+      # - DOCKER_MODS=linuxserver/mods:universal-package-install
+      # - INSTALL_PACKAGES=fonts-noto-cjk fonts-noto-extra
+
+      # Optional: Keyboard Layout
+      # - KEYBOARD=en-us-qwerty
+
+      # Optional: Vault Synchronization (separate compose files)
+      # Syncthing P2P:  docker-compose -f docker-compose.yml -f docker-compose.sync-syncthing.yml up -d
+      # Cloud Sync:     docker-compose -f docker-compose.yml -f docker-compose.sync-rclone.yml up -d
+      # See: docs/sync-providers.md
+
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh -c 'if [ -z \"$$CUSTOM_USER\" ] || [ -z \"$$PASSWORD\" ]; then curl --fail http://localhost:$$CUSTOM_PORT/ || exit 1; else curl --fail --user \"$$CUSTOM_USER:$$PASSWORD\" http://localhost:$$CUSTOM_PORT/ || exit 1; fi'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Optional: Named volumes instead of bind mounts
+# volumes:
+#   vaults:
+#   config:

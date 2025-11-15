@@ -1,0 +1,6 @@
+# Environment variables (may contain sensitive data)
+.env
+
+# Docker volumes (optional - comment out if you want to track these)
+vaults/
+config/
