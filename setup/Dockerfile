@@ -20,15 +20,16 @@ RUN addgroup -g 1001 setupuser || true && \
 WORKDIR /app
 
 # Copy node_modules from builder
-COPY --from=builder --chown=setupuser:setupuser /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy application files
-COPY --chown=setupuser:setupuser src ./src
-COPY --chown=setupuser:setupuser public ./public
-COPY --chown=setupuser:setupuser package.json ./
+COPY src ./src
+COPY public ./public
+COPY package.json ./
 
-# Switch to non-root user
-USER setupuser
+# Note: Running as root for setup wizard to allow file creation
+# This is acceptable for a one-time setup tool that needs to write config files
+# and execute Docker commands via socket
 
 EXPOSE 3000
 
