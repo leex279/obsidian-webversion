@@ -1,0 +1,89 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-reverse-proxy
+    restart: unless-stopped
+    ports:
+      # HTTP port for Let's Encrypt validation and auto-redirect to HTTPS
+      - "80:80"
+      # HTTPS port for secure access
+      - "443:443"
+      # HTTP/3 (QUIC) support
+      - "443:443/udp"
+    volumes:
+      # Caddyfile configuration
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Persistent storage for SSL certificates and Caddy data
+      - caddy_data:/data
+      # Caddy configuration storage
+      - caddy_config:/config
+      # Log directory
+      - ./logs/caddy:/data/logs
+    environment:
+      # Domain and email from .env file
+      - DOMAIN=${DOMAIN}
+      - CADDY_EMAIL=${CADDY_EMAIL}
+    networks:
+      - obsidian_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2019/config/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      obsidian:
+        condition: service_healthy
+
+  obsidian:
+    image: obsidian-remote:local-autorestart
+    container_name: obsidian-remote
+    restart: unless-stopped
+    # Ports are NOT exposed to host - only accessible via Caddy reverse proxy
+    expose:
+      - "8080"
+      - "8443"
+    volumes:
+      - ./vaults:/vaults
+      - ./config:/config
+    environment:
+      # Core Settings
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Etc/UTC}
+
+      # Web Interface Configuration
+      - CUSTOM_PORT=${CUSTOM_PORT:-8080}
+      - CUSTOM_HTTPS_PORT=${CUSTOM_HTTPS_PORT:-8443}
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
+      - SUBFOLDER=${SUBFOLDER}
+      - TITLE=${TITLE:-Obsidian Remote}
+      - FM_HOME=${FM_HOME:-/vaults}
+
+      # Optional: Docker Mods
+      - DOCKER_MODS=${DOCKER_MODS}
+      - INSTALL_PACKAGES=${INSTALL_PACKAGES}
+      - KEYBOARD=${KEYBOARD}
+
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh -c 'if [ -z \"$$CUSTOM_USER\" ] || [ -z \"$$PASSWORD\" ]; then curl --fail http://localhost:$$CUSTOM_PORT/ || exit 1; else curl --fail --user \"$$CUSTOM_USER:$$PASSWORD\" http://localhost:$$CUSTOM_PORT/ || exit 1; fi'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - obsidian_network
+
+# Named volumes for persistent certificate storage
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+# Internal network for Caddy-Obsidian communication
+networks:
+  obsidian_network:
+    driver: bridge
+    name: obsidian_network

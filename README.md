@@ -10,6 +10,7 @@ Use `http://localhost:8080/` to access it locally, do not expose this to the web
   - [Environment Variables](#environment-variables)
   - [Language Support](#language-support)
 - [Using Docker Compose](#using-docker-compose)
+- [Production Deployment with Caddy SSL](#production-deployment-with-caddy-ssl)
 - [Enabling GIT for the obsidian-git plugin](#enabling-git-for-the-obsidian-git-plugin)
   - [Docker CLI example](#docker-cli-example)
 - [Reloading Obsidan in the Browser](#reloading-obsidan-in-the-browser)
@@ -133,7 +134,32 @@ To type other language in the browser you should enable the **IME Input Mode** i
 
 ## Using Docker Compose
 
-```YAML
+A production-ready `docker-compose.yml` file is provided in the repository root. To use it:
+
+```bash
+# Copy the example environment file and customize it
+cp .env.example .env
+nano .env  # Edit with your preferred editor
+
+# Start the container
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the container
+docker-compose down
+```
+
+The provided `docker-compose.yml` includes:
+- All environment variables with sensible defaults
+- Health check configuration
+- Production-ready restart policy
+- Commented examples for optional features (git, language support)
+
+**Quick Start Example:**
+
+```yaml
 services:
   obsidian:
     image: 'ghcr.io/sytone/obsidian-remote:latest'
@@ -143,19 +169,60 @@ services:
       - 8080:8080
       - 8443:8443
     volumes:
-      - /home/obsidian/vaults:/vaults
-      - /home/obsidian/config:/config
+      - ./vaults:/vaults
+      - ./config:/config
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
       - DOCKER_MODS=linuxserver/mods:universal-git
-      - CUSTOM_PORT="8080"
-      - CUSTOM_HTTPS_PORT="8443" 
-      - CUSTOM_USER=""
-      - PASSWORD=""
-      - SUBFOLDER=""
 ```
+
+See the `docker-compose.yml` file for all available options and the `.env.example` file for environment variable documentation.
+
+## Production Deployment with Caddy SSL
+
+For production deployments with automatic HTTPS and custom domain support, use the included Caddy reverse proxy configuration.
+
+**Features:**
+- Automatic Let's Encrypt SSL certificates
+- Automatic HTTP to HTTPS redirect
+- WebSocket support for KasmVNC
+- Zero-configuration certificate renewal
+- Production-ready security headers
+
+**Quick Start:**
+
+```bash
+# Copy production environment template
+cp .env.production.example .env
+
+# Edit with your domain and email
+nano .env
+
+# Deploy with Caddy reverse proxy
+docker-compose -f docker-compose.production.yml up -d
+```
+
+**Prerequisites:**
+- Custom domain with DNS A record pointing to your server
+- Ports 80 and 443 accessible from the internet
+- Valid email address for Let's Encrypt registration
+
+**Important:** Configure DNS BEFORE starting Caddy to avoid Let's Encrypt rate limits.
+
+See the [Production Deployment Guide](docs/production-deployment.md) for comprehensive setup instructions, DNS configuration, troubleshooting, and security recommendations.
+
+**Example configuration:**
+
+Your domain: `obsidian.example.com`
+```bash
+# .env file
+DOMAIN=obsidian.example.com
+CADDY_EMAIL=admin@example.com
+```
+
+After deployment, access your Obsidian instance securely at `https://obsidian.example.com` with automatic SSL!
 
 ## Enabling GIT for the obsidian-git plugin
 
