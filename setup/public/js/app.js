@@ -120,15 +120,22 @@ function setupWizard() {
                 });
 
                 const result = await response.json();
+                console.log('DNS Validation result:', result); // Debug log
 
                 if (result.valid) {
                     this.validationMessages.domain = '<p style="color: green;">✓ DNS validation passed!</p>';
+                    if (result.warnings && result.warnings.length > 0) {
+                        this.validationMessages.domain += '<p style="color: orange;">Warnings:</p><ul>' +
+                            result.warnings.map(w => `<li>${w.message}</li>`).join('') +
+                            '</ul>';
+                    }
                 } else {
                     this.validationMessages.domain = '<p style="color: red;">✗ Validation failed:</p><ul>' +
                         result.errors.map(e => `<li>${e.message}</li>`).join('') +
                         '</ul>';
                 }
             } catch (error) {
+                console.error('Validation error:', error); // Debug log
                 this.validationMessages.domain = '<p style="color: red;">✗ Validation error: ' + error.message + '</p>';
             }
         },
