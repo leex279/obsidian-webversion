@@ -118,13 +118,47 @@ function validateDomain(domain) {
 }
 
 /**
- * Validate DNS records for domain (A or AAAA record exists)
+ * Get server's public IP address
+ */
+async function getServerPublicIP() {
+  return new Promise((resolve, reject) => {
+    https.get('https://api.ipify.org?format=json', { timeout: 5000 }, (response) => {
+      let data = '';
+      response.on('data', (chunk) => { data += chunk; });
+      response.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          resolve(result.ip);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on('error', reject).on('timeout', () => {
+      reject(new Error('Timeout getting server IP'));
+    });
+  });
+}
+
+/**
+ * Validate DNS records for domain (A or AAAA record exists and points to this server)
  */
 async function validateDNS(domain) {
   const errors = [];
   const warnings = [];
 
   try {
+    // Get this server's public IP
+    let serverIP;
+    try {
+      serverIP = await getServerPublicIP();
+    } catch (error) {
+      warnings.push({
+        field: 'DOMAIN',
+        message: 'Could not detect server IP - skipping IP match validation',
+        severity: 'warning'
+      });
+    }
+
     // Try to resolve A record
     const addresses = await dns.resolve4(domain).catch(() => []);
 
@@ -136,6 +170,18 @@ async function validateDNS(domain) {
         errors.push({
           field: 'DOMAIN',
           message: `No DNS records found for ${domain} - add A or AAAA record pointing to your server`,
+          severity: 'error'
+        });
+        return { valid: false, errors, warnings };
+      }
+    }
+
+    // Check if domain points to this server
+    if (serverIP && addresses.length > 0) {
+      if (!addresses.includes(serverIP)) {
+        errors.push({
+          field: 'DOMAIN',
+          message: `Domain ${domain} points to ${addresses[0]}, but this server's IP is ${serverIP}. Update your DNS A record.`,
           severity: 'error'
         });
       }
