@@ -1,5 +1,8 @@
 services:
   obsidian:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: 'obsidian-remote:local-autorestart'
     container_name: obsidian-remote
     restart: unless-stopped
