@@ -37,6 +37,49 @@ services:
       obsidian:
         condition: service_healthy
 
+  setup-wizard:
+    build:
+      context: ./setup
+      dockerfile: Dockerfile
+    image: obsidian-setup-wizard:latest
+    container_name: obsidian-setup-wizard
+    restart: "no"  # Don't auto-restart - setup is one-time
+    profiles:
+      - setup  # Only start when explicitly requested
+    expose:
+      - "3000"
+    volumes:
+      # Environment files (read/write)
+      - ./.env:/workspace/.env:rw
+      - ./.env.example:/workspace/.env.example:ro
+      - ./.env.production.example:/workspace/.env.production.example:ro
+      - ./.env.auth.example:/workspace/.env.auth.example:ro
+      - ./.env.sync.example:/workspace/.env.sync.example:ro
+
+      # Docker Compose files (read-only for validation)
+      - ./docker-compose.yml:/workspace/docker-compose.yml:ro
+      - ./docker-compose.production.yml:/workspace/docker-compose.production.yml:ro
+      - ./docker-compose.auth.yml:/workspace/docker-compose.auth.yml:ro
+
+      # Docker CLI access (safer than socket mounting)
+      # Note: This requires docker CLI installed in container
+      - /usr/bin/docker:/usr/bin/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - WORKSPACE_DIR=/workspace
+      - SETUP_TOKEN=${SETUP_TOKEN:-}
+    networks:
+      - obsidian_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # NO dependencies - setup wizard runs standalone
+
   oauth2-proxy:
     # Pinned to specific version for reproducible builds
     # Update: Check https://github.com/oauth2-proxy/oauth2-proxy/releases

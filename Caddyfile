@@ -25,6 +25,16 @@
 		respond "OK" 200
 	}
 
+	# Setup wizard (bypass auth during setup)
+	handle /setup* {
+		reverse_proxy setup-wizard:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
 	# OAuth2 callback endpoint (bypass auth, needed for OAuth flow)
 	handle /oauth2/callback {
 		reverse_proxy oauth2-proxy:4180 {

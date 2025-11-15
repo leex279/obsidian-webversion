@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian Remote - Setup Wizard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div x-data="setupWizard()" class="container">
+        <header>
+            <h1>Obsidian Remote Setup Wizard</h1>
+            <div class="progress-bar">
+                <div class="progress" :style="`width: ${(currentStep / totalSteps) * 100}%`"></div>
+            </div>
+            <p class="step-indicator">Step <span x-text="currentStep"></span> of <span x-text="totalSteps"></span></p>
+        </header>
+
+        <main>
+            <!-- Step 1: Deployment Type -->
+            <div x-show="currentStep === 1" class="step">
+                <h2>Select Deployment Type</h2>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" x-model="config.deploymentType" value="local">
+                        <div>
+                            <strong>Local Development</strong>
+                            <p>Basic configuration for local testing</p>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" x-model="config.deploymentType" value="production">
+                        <div>
+                            <strong>Production (Caddy + SSL)</strong>
+                            <p>Domain, SSL certificate, and reverse proxy setup</p>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" x-model="config.deploymentType" value="production-auth">
+                        <div>
+                            <strong>Production + Authentication</strong>
+                            <p>Full production with OAuth2/OIDC authentication</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Step 2: Basic Settings -->
+            <div x-show="currentStep === 2" class="step">
+                <h2>Basic Settings</h2>
+                <div class="form-group">
+                    <label>User ID (PUID)</label>
+                    <input type="number" x-model="config.PUID" placeholder="1000">
+                    <small>User ID for file ownership (run 'id -u' to get yours)</small>
+                </div>
+                <div class="form-group">
+                    <label>Group ID (PGID)</label>
+                    <input type="number" x-model="config.PGID" placeholder="1000">
+                    <small>Group ID for file ownership (run 'id -g' to get yours)</small>
+                </div>
+                <div class="form-group">
+                    <label>Timezone</label>
+                    <input type="text" x-model="config.TZ" placeholder="America/New_York">
+                    <small>Timezone (e.g., America/New_York, Europe/London, Etc/UTC)</small>
+                </div>
+                <div class="form-group">
+                    <label>HTTP Port</label>
+                    <input type="number" x-model="config.CUSTOM_PORT" placeholder="8080">
+                </div>
+                <div class="form-group">
+                    <label>HTTPS Port</label>
+                    <input type="number" x-model="config.CUSTOM_HTTPS_PORT" placeholder="8443">
+                </div>
+            </div>
+
+            <!-- Step 3: Domain & SSL (Production only) -->
+            <div x-show="currentStep === 3 && (config.deploymentType === 'production' || config.deploymentType === 'production-auth')" class="step">
+                <h2>Domain & SSL Configuration</h2>
+                <div class="form-group">
+                    <label>Domain</label>
+                    <input type="text" x-model="config.DOMAIN" placeholder="obsidian.example.com">
+                    <small>Your domain name (must have DNS A/AAAA record pointing to this server)</small>
+                </div>
+                <div class="form-group">
+                    <label>Email for SSL Certificate</label>
+                    <input type="email" x-model="config.CADDY_EMAIL" placeholder="admin@example.com">
+                    <small>Email for Let's Encrypt SSL certificate notifications</small>
+                </div>
+                <button @click="validateDomain()" class="btn-secondary">Validate DNS</button>
+                <div x-show="validationMessages.domain" x-html="validationMessages.domain" class="validation-message"></div>
+            </div>
+
+            <!-- Step 4: Authentication (Production + Auth only) -->
+            <div x-show="currentStep === 4 && config.deploymentType === 'production-auth'" class="step">
+                <h2>Authentication Configuration</h2>
+                <div class="form-group">
+                    <label>OIDC Issuer URL</label>
+                    <input type="text" x-model="config.AUTH_OIDC_ISSUER_URL" placeholder="https://your-provider.com">
+                    <small>Your OAuth2/OIDC provider's issuer URL</small>
+                </div>
+                <div class="form-group">
+                    <label>Client ID</label>
+                    <input type="text" x-model="config.AUTH_CLIENT_ID" placeholder="your-client-id">
+                </div>
+                <div class="form-group">
+                    <label>Client Secret</label>
+                    <input type="password" x-model="config.AUTH_CLIENT_SECRET" placeholder="your-client-secret">
+                </div>
+                <div class="form-group">
+                    <label>Cookie Secret</label>
+                    <input type="text" x-model="config.AUTH_COOKIE_SECRET" placeholder="Auto-generated">
+                    <button @click="generateCookieSecret()" class="btn-secondary">Generate</button>
+                </div>
+                <div class="form-group">
+                    <label>Email Domains (comma-separated)</label>
+                    <input type="text" x-model="config.AUTH_EMAIL_DOMAINS" placeholder="example.com">
+                    <small>Allowed email domains (* for any)</small>
+                </div>
+            </div>
+
+            <!-- Step 5: Review & Deploy -->
+            <div x-show="currentStep === 5" class="step">
+                <h2>Review Configuration</h2>
+                <div class="review-section">
+                    <h3>Deployment Type</h3>
+                    <p x-text="config.deploymentType"></p>
+
+                    <h3>Basic Settings</h3>
+                    <p>PUID: <span x-text="config.PUID"></span></p>
+                    <p>PGID: <span x-text="config.PGID"></span></p>
+                    <p>Timezone: <span x-text="config.TZ"></span></p>
+
+                    <template x-if="config.deploymentType !== 'local'">
+                        <div>
+                            <h3>Domain & SSL</h3>
+                            <p>Domain: <span x-text="config.DOMAIN"></span></p>
+                            <p>Email: <span x-text="config.CADDY_EMAIL"></span></p>
+                        </div>
+                    </template>
+
+                    <template x-if="config.deploymentType === 'production-auth'">
+                        <div>
+                            <h3>Authentication</h3>
+                            <p>Issuer: <span x-text="config.AUTH_OIDC_ISSUER_URL"></span></p>
+                            <p>Client ID: <span x-text="config.AUTH_CLIENT_ID"></span></p>
+                        </div>
+                    </template>
+                </div>
+
+                <button @click="deploy()" class="btn-primary" :disabled="deploying">
+                    <span x-show="!deploying">Deploy</span>
+                    <span x-show="deploying">Deploying...</span>
+                </button>
+
+                <div x-show="deploymentLogs" class="logs">
+                    <h3>Deployment Logs</h3>
+                    <pre x-text="deploymentLogs"></pre>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <button @click="previousStep()" x-show="currentStep > 1 && !deploying" class="btn-secondary">
+                Previous
+            </button>
+            <button @click="nextStep()" x-show="currentStep < totalSteps && !deploying" class="btn-primary">
+                Next
+            </button>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

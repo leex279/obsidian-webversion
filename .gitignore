@@ -4,3 +4,5 @@
 # Docker volumes (optional - comment out if you want to track these)
 vaults/
 config/
+setup/node_modules/
+*.log

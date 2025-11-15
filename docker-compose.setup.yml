@@ -1,0 +1,45 @@
+services:
+  setup-wizard:
+    build:
+      context: ./setup
+      dockerfile: Dockerfile
+    image: obsidian-setup-wizard:latest
+    container_name: obsidian-setup-wizard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Environment files (read/write)
+      - ./.env:/workspace/.env:rw
+      - ./.env.example:/workspace/.env.example:ro
+      - ./.env.production.example:/workspace/.env.production.example:ro
+      - ./.env.auth.example:/workspace/.env.auth.example:ro
+      - ./.env.sync.example:/workspace/.env.sync.example:ro
+
+      # Docker Compose files (read-only for validation)
+      - ./docker-compose.yml:/workspace/docker-compose.yml:ro
+      - ./docker-compose.production.yml:/workspace/docker-compose.production.yml:ro
+      - ./docker-compose.auth.yml:/workspace/docker-compose.auth.yml:ro
+
+      # Docker socket access (allows docker commands from container)
+      # Docker CLI is installed in the container, just needs socket access
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - WORKSPACE_DIR=/workspace
+      - SETUP_TOKEN=${SETUP_TOKEN:-}
+      - DISABLE_AFTER_SETUP=${DISABLE_AFTER_SETUP:-true}
+    networks:
+      - obsidian_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  obsidian_network:
+    driver: bridge
+    name: obsidian_network

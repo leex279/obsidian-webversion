@@ -1,0 +1,22 @@
+{
+  "name": "obsidian-remote-setup-wizard",
+  "version": "1.0.0",
+  "description": "Web-based setup wizard for Obsidian Remote",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "fastify": "4.26.0",
+    "@fastify/static": "7.0.1",
+    "@fastify/cors": "9.0.1",
+    "dotenv": "16.4.1",
+    "js-yaml": "4.1.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
