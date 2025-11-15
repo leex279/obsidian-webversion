@@ -45,9 +45,11 @@
 		}
 	}
 
-	# All other requests go through OAuth2-Proxy
+	# All other requests - route based on whether auth is enabled
 	handle {
-		reverse_proxy oauth2-proxy:4180 {
+		# If AUTH_ENABLED is not set or false, route directly to Obsidian
+		# If AUTH_ENABLED is true, route through OAuth2-Proxy
+		reverse_proxy {$AUTH_UPSTREAM:obsidian:8080} {
 			header_up Host {host}
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}

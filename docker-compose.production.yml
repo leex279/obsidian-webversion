@@ -23,6 +23,8 @@ services:
       # Domain and email from .env file
       - DOMAIN=${DOMAIN}
       - CADDY_EMAIL=${CADDY_EMAIL}
+      # Auth upstream - defaults to direct Obsidian, set to oauth2-proxy:4180 for auth
+      - AUTH_UPSTREAM=${AUTH_UPSTREAM:-obsidian:8080}
     networks:
       - obsidian_network
     healthcheck:
@@ -32,8 +34,6 @@ services:
       retries: 3
       start_period: 10s
     depends_on:
-      oauth2-proxy:
-        condition: service_healthy
       obsidian:
         condition: service_healthy
 
@@ -77,6 +77,8 @@ services:
     image: quay.io/oauth2-proxy/oauth2-proxy:v7.13.0
     container_name: obsidian-auth-proxy
     restart: unless-stopped
+    profiles:
+      - auth  # Only start when authentication is configured
     command:
       - --provider=oidc
       - --provider-display-name=${AUTH_PROVIDER_DISPLAY_NAME:-OIDC Provider}

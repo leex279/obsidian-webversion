@@ -169,10 +169,16 @@ function setupWizard() {
 
                 this.deploymentLogs += '✓ Configuration saved\n';
 
-                // Determine compose file
+                // Determine compose file and profiles
                 let composeFile = 'docker-compose.yml';
-                if (this.config.deploymentType === 'production' || this.config.deploymentType === 'production-auth') {
+                let profiles = [];
+
+                if (this.config.deploymentType === 'production') {
                     composeFile = 'docker-compose.production.yml';
+                    // No auth profile - oauth2-proxy won't start
+                } else if (this.config.deploymentType === 'production-auth') {
+                    composeFile = 'docker-compose.production.yml';
+                    profiles = ['auth']; // Enable auth profile for oauth2-proxy
                 }
 
                 // Build services
@@ -188,10 +194,13 @@ function setupWizard() {
 
                 // Start services
                 this.deploymentLogs += '\nStarting services...\n';
+                this.deploymentLogs += `Deployment type: ${this.config.deploymentType}\n`;
+                this.deploymentLogs += `Profiles: ${profiles.length > 0 ? profiles.join(', ') : 'none'}\n`;
+
                 const startResponse = await fetch('/api/deploy/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ composeFile })
+                    body: JSON.stringify({ composeFile, profiles })
                 });
 
                 const startResult = await startResponse.json();

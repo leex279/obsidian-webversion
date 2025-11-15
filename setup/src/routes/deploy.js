@@ -24,10 +24,13 @@ async function deployRoutes(fastify, options) {
 
   // POST /api/deploy/start - Start services
   fastify.post('/start', async (request, reply) => {
-    const { composeFile } = request.body;
+    const { composeFile, profiles } = request.body;
 
     try {
-      const result = await dockerCli.startServices(composeFile || 'docker-compose.production.yml');
+      const result = await dockerCli.startServices(
+        composeFile || 'docker-compose.production.yml',
+        profiles
+      );
 
       return {
         success: result.success,

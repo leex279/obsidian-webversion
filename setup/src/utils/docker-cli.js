@@ -103,10 +103,20 @@ async function getServiceStatus(composeFile) {
 }
 
 /**
- * Start services (docker-compose up -d)
+ * Start services (docker compose up -d)
+ * @param {string} composeFile - Compose file to use
+ * @param {Array<string>} profiles - Optional profiles to activate (e.g., ['auth'])
  */
-async function startServices(composeFile) {
-  return await executeDockerCompose('up -d', composeFile);
+async function startServices(composeFile, profiles = []) {
+  let command = 'up -d';
+
+  // Add profile flags if provided
+  if (profiles && profiles.length > 0) {
+    const profileFlags = profiles.map(p => `--profile ${p}`).join(' ');
+    command = `${profileFlags} up -d`;
+  }
+
+  return await executeDockerCompose(command, composeFile);
 }
 
 /**
