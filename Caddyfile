@@ -6,22 +6,6 @@
 }
 
 {$DOMAIN} {
-	# Reverse proxy to Obsidian Remote container
-	reverse_proxy obsidian:8080 {
-		# Health check
-		health_uri /
-		health_interval 30s
-		health_timeout 10s
-
-		# WebSocket support (automatic in Caddy v2)
-		# Headers for proper proxying
-		header_up Host {host}
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-		header_up X-Forwarded-Host {host}
-	}
-
 	# Security headers
 	header {
 		# Enable HSTS
@@ -34,6 +18,35 @@
 		X-XSS-Protection "1; mode=block"
 		# Referrer policy
 		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Health check endpoint (bypass auth)
+	handle /health {
+		respond "OK" 200
+	}
+
+	# OAuth2 callback endpoint (bypass auth, needed for OAuth flow)
+	handle /oauth2/callback {
+		reverse_proxy oauth2-proxy:4180 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# All other requests go through OAuth2-Proxy
+	handle {
+		reverse_proxy oauth2-proxy:4180 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+
+			# WebSocket support for KasmVNC
+			header_up Connection {>Connection}
+			header_up Upgrade {>Upgrade}
+		}
 	}
 
 	# Logging

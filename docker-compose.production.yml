@@ -32,6 +32,47 @@ services:
       retries: 3
       start_period: 10s
     depends_on:
+      oauth2-proxy:
+        condition: service_healthy
+      obsidian:
+        condition: service_healthy
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:latest
+    container_name: obsidian-auth-proxy
+    restart: unless-stopped
+    command:
+      - --provider=oidc
+      - --provider-display-name=Supabase Auth
+      - --redirect-url=https://${DOMAIN}/oauth2/callback
+      - --oidc-issuer-url=${AUTH_OIDC_ISSUER_URL}
+      - --client-id=${AUTH_CLIENT_ID}
+      - --client-secret=${AUTH_CLIENT_SECRET}
+      - --cookie-secret=${AUTH_COOKIE_SECRET}
+      - --cookie-secure=true
+      - --cookie-domain=${DOMAIN}
+      - --email-domain=${AUTH_EMAIL_DOMAINS:-*}
+      - --upstream=http://obsidian:${CUSTOM_PORT:-8080}
+      - --http-address=0.0.0.0:4180
+      - --reverse-proxy=true
+      - --pass-host-header=true
+      - --set-xauthrequest=true
+    expose:
+      - "4180"
+    environment:
+      - OAUTH2_PROXY_COOKIE_SECRET=${AUTH_COOKIE_SECRET}
+      - OAUTH2_PROXY_CLIENT_ID=${AUTH_CLIENT_ID}
+      - OAUTH2_PROXY_CLIENT_SECRET=${AUTH_CLIENT_SECRET}
+      - OAUTH2_PROXY_OIDC_ISSUER_URL=${AUTH_OIDC_ISSUER_URL}
+    networks:
+      - obsidian_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:4180/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
       obsidian:
         condition: service_healthy
 

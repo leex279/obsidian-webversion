@@ -5,6 +5,7 @@ Run [Obsidian](https://obsidian.md/) in Docker and access it via your web browse
 ## ✨ Features
 
 - 🌐 **Browser-based access** - Access Obsidian from any device with a web browser
+- 🔐 **Production-ready authentication** - OAuth2/OIDC authentication with Supabase, Google, GitHub, and more
 - 🔒 **Production-ready SSL** - Automatic HTTPS with Let's Encrypt via Caddy reverse proxy
 - 🔄 **Auto-updates** - Obsidian updates itself within the container
 - 🌍 **Multi-language support** - CJK fonts and IME input support
@@ -16,6 +17,9 @@ Run [Obsidian](https://obsidian.md/) in Docker and access it via your web browse
 - [Quick Start](#quick-start)
   - [Local Development](#local-development)
   - [Production Deployment](#production-deployment)
+- [Authentication](#authentication)
+  - [Quick Start](#authentication-quick-start)
+  - [Supported Providers](#supported-providers)
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
   - [Volumes](#volumes)
@@ -99,6 +103,83 @@ Access securely at `https://obsidian.example.com` 🎉
 
 **📖 For detailed production setup, DNS configuration, and troubleshooting, see:**
 **[Production Deployment Guide](docs/production-deployment.md)**
+
+## 🔐 Authentication
+
+Protect your Obsidian vaults with production-ready authentication.
+
+### Why Authentication?
+
+The default HTTP Basic Auth is **not secure enough** for sensitive data. LinuxServer.io warns:
+
+> "This authentication mechanism should be used to keep the kids out not the internet."
+
+Our authentication layer provides:
+- **OAuth2/OIDC standard security** - Industry-standard protocols
+- **Session management** - Secure, signed cookies
+- **Multi-Factor Authentication** - Via your identity provider
+- **Single Sign-On (SSO)** - Use existing accounts
+- **Multiple providers** - Supabase, Google, GitHub, Authelia, Authentik, Keycloak, and more
+
+### Supported Providers
+
+| Provider | Setup Complexity | MFA Support | Cost | Guide |
+|----------|-----------------|-------------|------|-------|
+| Supabase (Cloud) | Low | ✅ | Free tier | [Setup Guide](docs/providers/supabase-auth.md) |
+| Google | Low | ✅ | Free | [Setup Guide](docs/providers/generic-oauth2.md#google) |
+| GitHub | Low | ✅ | Free | [Setup Guide](docs/providers/generic-oauth2.md#github) |
+| Supabase (Self-hosted) | Medium | ✅ | Free | [Setup Guide](docs/providers/supabase-auth.md#option-2-self-hosted-supabase) |
+| Authelia | High | ✅ | Free | [Setup Guide](docs/providers/generic-oauth2.md) |
+| Authentik | High | ✅ | Free | [Setup Guide](docs/providers/generic-oauth2.md) |
+| Keycloak | High | ✅ | Free | [Setup Guide](docs/providers/generic-oauth2.md#keycloak) |
+
+### Authentication Quick Start
+
+**Prerequisites:**
+- Running production deployment with Caddy
+- Custom domain with HTTPS
+- Identity provider account (Supabase recommended for beginners)
+
+**Setup:**
+
+```bash
+# 1. Generate cookie secret
+./scripts/generate-cookie-secret.sh
+
+# 2. Configure environment
+cp .env.auth.example .env
+nano .env  # Add your provider credentials
+
+# 3. Validate configuration
+./scripts/validate-auth-config.sh
+
+# 4. Deploy with authentication
+docker-compose -f docker-compose.production.yml up -d
+```
+
+**📖 Comprehensive guide:** [Authentication Setup Guide](docs/authentication-setup.md)
+
+### Architecture
+
+```
+Internet → Caddy (HTTPS) → OAuth2-Proxy (Auth) → Obsidian
+```
+
+**Flow:**
+1. User accesses your domain
+2. OAuth2-Proxy checks for valid session
+3. No session → Redirect to identity provider login
+4. After successful login → Set session cookie → Access Obsidian
+5. Subsequent requests validated via cookie
+
+### Security Features
+
+- **Secure session cookies** - Signed and encrypted
+- **HTTPS only** - Cookies sent over encrypted connections only
+- **Email domain restrictions** - Limit access by organization
+- **User allowlisting** - Restrict to specific users
+- **MFA support** - Via identity provider
+- **Audit logging** - Track authentication events
 
 ## ⚙️ Configuration
 
@@ -192,6 +273,51 @@ volumes:
   - ./config:/config
   - ./fonts/MyFont:/usr/share/fonts/truetype/myfont
 ```
+
+### Vault Synchronization
+
+Keep your Obsidian vaults in sync across multiple devices using optional sync providers.
+
+#### Syncthing (Peer-to-Peer)
+
+Sync directly between devices without cloud storage:
+
+```bash
+# Start Obsidian with Syncthing sync
+docker-compose -f docker-compose.yml -f docker-compose.sync-syncthing.yml up -d
+
+# Access Syncthing GUI: http://localhost:8384
+# Configure device pairing and folder sharing
+```
+
+**Features:**
+- Direct device-to-device sync
+- Fast LAN transfer speeds
+- No cloud storage required
+- Privacy-focused (data never leaves your network)
+
+#### rclone (Cloud Storage)
+
+Sync with Google Drive, Dropbox, OneDrive, and 40+ providers:
+
+```bash
+# Generate rclone config (interactive)
+docker-compose -f docker-compose.sync-rclone.yml run --rm rclone config
+
+# Start Obsidian with cloud sync
+docker-compose -f docker-compose.yml -f docker-compose.sync-rclone.yml up -d
+```
+
+**Supported Providers:**
+- Google Drive
+- Dropbox
+- Microsoft OneDrive
+- Box, pCloud, and many more
+
+**📖 See comprehensive setup guides:**
+- [Sync Providers Overview](docs/sync-providers.md)
+- [Syncthing Setup Guide](docs/sync-syncthing-guide.md)
+- [rclone Setup Guide](docs/sync-rclone-guide.md)
 
 ## 💡 Usage Tips
 

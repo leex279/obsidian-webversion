@@ -1,0 +1,395 @@
+{
+  "name": "obsidian-webversion",
+  "data": [
+    {
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "text": "Pre-Requirements",
+      "completed": false,
+      "createdAt": "2025-11-15T15:30:00.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "text": "Docker & Docker Compose Installed",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Verify installation\ndocker --version\ndocker compose version\n\n# Installation guide:\n# https://docs.docker.com/engine/install/",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:30:10.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "text": "Custom Domain Configured",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Create DNS A Record pointing to your server's IP\n# Type: A\n# Name: obsidian (or your subdomain)\n# Value: YOUR_SERVER_PUBLIC_IP\n# TTL: 3600\n\n# Verify DNS propagation:\ndig +short obsidian.yourdomain.com",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:30:20.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "text": "Server Ports 80 & 443 Open",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Check if ports are open\nsudo ufw status\n\n# Allow ports if needed:\nsudo ufw allow 80/tcp\nsudo ufw allow 443/tcp\n\n# For other firewalls, ensure ports 80 and 443 are accessible from internet",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:30:30.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "text": "Valid Email Address for SSL",
+      "optional": false,
+      "codeBlock": {
+        "code": "# You need a valid email for Let's Encrypt SSL certificate registration\n# Used for renewal notifications and account management\n# Example: admin@yourdomain.com",
+        "language": "javascript"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:30:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "text": "Repository & Initial Setup",
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:00.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+      "text": "Repository URL (for reference)",
+      "optional": false,
+      "codeBlock": {
+        "code": "https://github.com/leex279/obsidian-webversion",
+        "language": "javascript"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:10.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
+      "text": "Clone the Repository",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Navigate to your desired directory\ncd ~\n\n# Clone the repository\ngit clone https://github.com/leex279/obsidian-webversion.git\n\n# Or if you prefer a different location:\n# git clone https://github.com/leex279/obsidian-webversion.git /opt/obsidian-remote",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:20.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+      "text": "Change to Project Directory",
+      "optional": false,
+      "codeBlock": {
+        "code": "cd obsidian-webversion",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:30.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "text": "Build Docker Image",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Build the Obsidian Remote image\ndocker build -t obsidian-remote:local-autorestart .\n\n# This will take a few minutes to download and build",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "text": "Create Environment File",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Copy the production environment template\ncp .env.production.example .env\n\n# The repo includes .env.production.example with all necessary variables\n# This is the correct template for production deployment with Caddy SSL",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:31:50.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "text": "Configure Domain and Email",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Edit .env file with your settings\nnano .env\n\n# REQUIRED - Change these values:\nDOMAIN=obsidian.yourdomain.com\nCADDY_EMAIL=admin@yourdomain.com\n\n# OPTIONAL - Adjust if needed:\nPUID=1000  # Run 'id' command to get your user ID\nPGID=1000  # Run 'id' command to get your group ID\nTZ=America/New_York  # Your timezone\n\n# Save and exit (Ctrl+O, Enter, Ctrl+X)",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:32:00.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e",
+      "text": "Production Deployment",
+      "completed": false,
+      "createdAt": "2025-11-15T15:32:30.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "text": "Start Production Stack",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Start the production deployment with Caddy SSL\ndocker compose -f docker-compose.production.yml up -d\n\n# Note: Older Docker versions use 'docker-compose' (with hyphen):\n# docker-compose -f docker-compose.production.yml up -d\n\n# This will:\n# - Start Obsidian container\n# - Start Caddy reverse proxy\n# - Automatically obtain Let's Encrypt SSL certificate\n# - The Caddyfile is already included in the repo",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:32:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a",
+      "text": "Monitor SSL Certificate Issuance",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Watch Caddy logs for SSL certificate status\ndocker compose -f docker-compose.production.yml logs -f caddy\n\n# Look for messages like:\n# - \"certificate obtained successfully\"\n# - \"serving initial configuration\"\n\n# This usually takes 30-60 seconds\n# Press Ctrl+C to exit logs when certificate is obtained",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:32:50.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b",
+      "text": "Verify All Services Running",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Check service status\ndocker compose -f docker-compose.production.yml ps\n\n# All services should show:\n# - State: Up\n# - Health: healthy (after ~40 seconds)\n\n# If any service is unhealthy, check logs:\n# docker compose -f docker-compose.production.yml logs [service-name]",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:33:00.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c",
+      "text": "Test HTTPS Access",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Open in your browser:\nhttps://obsidian.yourdomain.com\n\n# Should:\n# - Load with valid SSL certificate (green lock icon)\n# - Show Obsidian login/interface\n# - No security warnings\n\n# Test from command line:\ncurl -I https://obsidian.yourdomain.com",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:33:10.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d",
+      "text": "Post-Deployment Configuration",
+      "completed": false,
+      "createdAt": "2025-11-15T15:33:30.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e",
+      "text": "Configure Vault Storage",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Your Obsidian vaults are stored in:\n./vaults/\n\n# To use existing vaults:\n# 1. Copy your vault folder to ./vaults/\n# 2. Open Obsidian in browser\n# 3. Select \"Open folder as vault\"\n# 4. Choose your vault from /vaults directory\n\n# Or create a new vault directly in Obsidian",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:33:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f",
+      "text": "Enable Git Support (Optional)",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Add to .env file:\nDOCKER_MODS=linuxserver/mods:universal-git\n\n# Restart services:\ndocker compose -f docker-compose.production.yml down\ndocker compose -f docker-compose.production.yml up -d\n\n# SSH keys for git will be stored in:\n./config/.ssh/\n\n# Useful for obsidian-git plugin",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:33:50.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a",
+      "text": "Set Up Backups",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Create backup script for vaults and config\n# Backup locations:\n# - ./vaults/ (your notes)\n# - ./config/ (Obsidian settings & SSH keys)\n# - ./logs/ (logs, optional)\n\n# Example backup command:\ntar -czf obsidian-backup-$(date +%Y%m%d).tar.gz vaults/ config/\n\n# Consider setting up automated backups with cron",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:34:00.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "e3f4a5b6-c7d8-4e9f-0a1b-2c3d4e5f6a7b",
+      "text": "Monitoring & Maintenance",
+      "completed": false,
+      "createdAt": "2025-11-15T15:34:20.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "f4a5b6c7-d8e9-4f0a-1b2c-3d4e5f6a7b8c",
+      "text": "Check Service Health",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Regular health check\ndocker compose -f docker-compose.production.yml ps\n\n# View logs for issues\ndocker compose -f docker-compose.production.yml logs --tail=50\n\n# Check disk usage\ndf -h\ndu -sh vaults/ config/",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:34:30.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d",
+      "text": "SSL Certificate Renewal",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Caddy automatically renews Let's Encrypt certificates\n# Certificates are stored in Docker volume: caddy_data\n\n# To manually trigger renewal (rarely needed):\ndocker exec caddy-reverse-proxy caddy reload --config /etc/caddy/Caddyfile\n\n# Check certificate expiration:\necho | openssl s_client -servername obsidian.yourdomain.com -connect obsidian.yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:34:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "b6c7d8e9-f0a1-4b2c-3d4e-5f6a7b8c9d0e",
+      "text": "Update Obsidian",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Obsidian updates automatically within the container\n# To update the base image:\n\n# 1. Pull latest changes\ngit pull\n\n# 2. Rebuild image\ndocker build -t obsidian-remote:local-autorestart .\n\n# 3. Recreate containers\ndocker compose -f docker-compose.production.yml up -d --force-recreate\n\n# Your vaults and config are preserved in volumes",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:34:50.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+      "text": "Troubleshooting Resources",
+      "optional": false,
+      "codeBlock": {
+        "code": "# Documentation:\n- Production Guide: docs/production-deployment.md\n- Main README: README.md\n- Sync Providers: docs/sync-providers.md\n- Authentication: docs/authentication-setup.md\n\n# Common issues:\n- Cannot access: Check DNS, firewall, ports 80/443\n- SSL errors: Check domain DNS propagation, Caddy logs\n- Permission errors: Check PUID/PGID settings\n\n# Get help:\n- GitHub Issues: https://github.com/leex279/obsidian-webversion/issues",
+        "language": "javascript"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T15:35:00.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d8e9f0a1-b2c3-4d4e-5f6a-7b8c9d0e1f2a",
+      "text": "Authentication Setup (Optional)",
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:00.000Z",
+      "isHeadline": true
+    },
+    {
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "text": "Choose Identity Provider",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Select an OAuth2/OIDC provider:\n\n# Recommended for beginners:\n- Supabase Cloud (free tier, easy setup)\n  Guide: docs/providers/supabase-auth.md\n\n# Other options:\n- Google OAuth2 (free)\n- GitHub OAuth2 (free)\n- Keycloak (self-hosted)\n- Authelia (self-hosted)\n- Authentik (self-hosted)\n\n# See: docs/providers/generic-oauth2.md for all providers",
+        "language": "javascript"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:10.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "f0a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+      "text": "Set Up Identity Provider",
+      "optional": true,
+      "codeBlock": {
+        "code": "# For Supabase Cloud:\n# 1. Create account at https://supabase.com\n# 2. Create new project\n# 3. Go to Authentication → URL Configuration\n# 4. Add redirect URI: https://your-domain.com/oauth2/callback\n# 5. Copy Project URL and API keys\n\n# For other providers, see:\n# docs/providers/generic-oauth2.md\n\n# Full guide:\n# docs/authentication-setup.md",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:20.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "text": "Generate Cookie Secret",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Generate secure cookie secret for session management\n./scripts/generate-cookie-secret.sh\n\n# Copy the output - you'll need it in the next step\n# Keep this secret secure!",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:30.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "text": "Configure Authentication Environment",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Update your .env file with authentication settings:\n\n# Add these to your existing .env:\nAUTH_OIDC_ISSUER_URL=https://your-project.supabase.co/auth/v1\nAUTH_CLIENT_ID=your-client-id\nAUTH_CLIENT_SECRET=your-client-secret\nAUTH_COOKIE_SECRET=your-generated-cookie-secret\n\n# Optional access control:\nAUTH_EMAIL_DOMAINS=*  # Or: yourdomain.com\nAUTH_ALLOWED_USERS=   # Or: user1@example.com,user2@example.com\n\n# Template available at: .env.auth.example",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:40.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "text": "Validate Authentication Configuration",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Validate your authentication setup\n./scripts/validate-auth-config.sh\n\n# Should output:\n# ✓ All required configuration is valid\n\n# Fix any errors before proceeding",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:00:50.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "text": "Restart with Authentication Enabled",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Restart the production stack\n# OAuth2-Proxy is now included in docker-compose.production.yml\ndocker compose -f docker-compose.production.yml down\ndocker compose -f docker-compose.production.yml up -d\n\n# Monitor startup:\ndocker compose -f docker-compose.production.yml logs -f oauth2-proxy",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:01:00.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "text": "Test Authentication Flow",
+      "optional": true,
+      "codeBlock": {
+        "code": "# 1. Access your domain in browser:\nhttps://obsidian.yourdomain.com\n\n# 2. Should redirect to identity provider login\n# 3. Login with your credentials\n# 4. Should redirect back to Obsidian\n# 5. Verify you can access Obsidian\n\n# Test logout:\nhttps://obsidian.yourdomain.com/oauth2/sign_out\n\n# Full documentation:\n# docs/authentication-setup.md",
+        "language": "bash"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:01:10.000Z",
+      "isHeadline": false
+    },
+    {
+      "id": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+      "text": "Enable MFA (Recommended)",
+      "optional": true,
+      "codeBlock": {
+        "code": "# Enable Multi-Factor Authentication in your identity provider:\n\n# For Supabase:\n# 1. Dashboard → Authentication → MFA\n# 2. Enable for all users or specific users\n\n# For Google:\n# Google Account → Security → 2-Step Verification\n\n# For GitHub:\n# Settings → Password and authentication → 2FA\n\n# This adds an extra layer of security beyond passwords",
+        "language": "javascript"
+      },
+      "completed": false,
+      "createdAt": "2025-11-15T18:01:20.000Z",
+      "isHeadline": false
+    }
+  ]
+}
