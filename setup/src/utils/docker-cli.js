@@ -35,10 +35,15 @@ async function executeDockerCompose(command, composeFile = 'docker-compose.yml')
 
   const fullCommand = `cd ${workspaceDir} && docker compose -f ${composeFile} ${command}`;
 
+  // Set timeout based on command type
+  // Build commands can take 5-10 minutes (downloading images, building)
+  // Other commands are quick
+  const timeout = baseCommand === 'build' ? 600000 : 120000; // 10 min for build, 2 min for others
+
   try {
     const { stdout, stderr } = await execPromise(fullCommand, {
-      timeout: 60000, // 60 second timeout
-      maxBuffer: 1024 * 1024 // 1MB buffer
+      timeout: timeout,
+      maxBuffer: 10 * 1024 * 1024 // 10MB buffer for build logs
     });
 
     return {
