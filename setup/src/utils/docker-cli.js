@@ -108,12 +108,12 @@ async function getServiceStatus(composeFile) {
  * @param {Array<string>} profiles - Optional profiles to activate (e.g., ['auth'])
  */
 async function startServices(composeFile, profiles = []) {
-  let command = 'up -d';
+  let command = 'up -d --remove-orphans';
 
   // Add profile flags if provided
   if (profiles && profiles.length > 0) {
     const profileFlags = profiles.map(p => `--profile ${p}`).join(' ');
-    command = `${profileFlags} up -d`;
+    command = `${profileFlags} up -d --remove-orphans`;
   }
 
   return await executeDockerCompose(command, composeFile);
