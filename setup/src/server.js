@@ -1,4 +1,8 @@
-const fastify = require('fastify')({ logger: true });
+const fastify = require('fastify')({
+  logger: true,
+  // Enable JSON body parsing (important for POST requests)
+  bodyLimit: 10485760 // 10MB
+});
 const path = require('path');
 const fastifyStatic = require('@fastify/static');
 const fastifyCors = require('@fastify/cors');
