@@ -75,6 +75,13 @@ async function writeEnvFile(filePath, envObject, deploymentType) {
     lines.push('# Production Configuration');
     if (envObject.DOMAIN) lines.push(`DOMAIN=${envObject.DOMAIN}`);
     if (envObject.CADDY_EMAIL) lines.push(`CADDY_EMAIL=${envObject.CADDY_EMAIL}`);
+
+    // Set auth upstream based on deployment type
+    if (deploymentType === 'production-auth') {
+      lines.push('AUTH_UPSTREAM=oauth2-proxy:4180');
+    } else {
+      lines.push('AUTH_UPSTREAM=obsidian:8080');
+    }
     lines.push('');
   }
 
