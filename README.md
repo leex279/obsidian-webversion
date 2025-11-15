@@ -1,395 +1,299 @@
-# obsidian-remote
+# Obsidian Web Version
 
-This docker image allows you to run [obsidian](https://obsidian.md/) in docker as a container and access it via your web browser.
+Run [Obsidian](https://obsidian.md/) in Docker and access it via your web browser. Perfect for remote access, server deployments, and cloud hosting.
 
-Use `http://localhost:8080/` to access it locally, do not expose this to the web unless you secure it and know what you are doing!!
+## ✨ Features
 
-- [Using the Container](#using-the-container)
-  - [Ports](#ports)
-  - [Mapped Volumes](#mapped-volumes)
+- 🌐 **Browser-based access** - Access Obsidian from any device with a web browser
+- 🔒 **Production-ready SSL** - Automatic HTTPS with Let's Encrypt via Caddy reverse proxy
+- 🔄 **Auto-updates** - Obsidian updates itself within the container
+- 🌍 **Multi-language support** - CJK fonts and IME input support
+- 📦 **Git integration** - Built-in support for obsidian-git plugin
+- 🎨 **Customizable** - Environment variables for user/group IDs, timezone, and more
+
+## 📋 Table of Contents
+
+- [Quick Start](#quick-start)
+  - [Local Development](#local-development)
+  - [Production Deployment](#production-deployment)
+- [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
+  - [Volumes](#volumes)
+- [Features](#features-guide)
+  - [Git Integration](#git-integration)
   - [Language Support](#language-support)
-- [Using Docker Compose](#using-docker-compose)
-- [Production Deployment with Caddy SSL](#production-deployment-with-caddy-ssl)
-- [Enabling GIT for the obsidian-git plugin](#enabling-git-for-the-obsidian-git-plugin)
-  - [Docker CLI example](#docker-cli-example)
-- [Reloading Obsidan in the Browser](#reloading-obsidan-in-the-browser)
-- [Setting PUID and PGID](#setting-puid-and-pgid)
-- [Adding missing fonts](#adding-missing-fonts)
-  - [Map font file using Docker CLI](#map-font-file-using-docker-cli)
-  - [Map font file using Docker Compose](#map-font-file-using-docker-compose)
-- [Hosting behind a reverse proxy](#hosting-behind-a-reverse-proxy)
-  - [Example nginx configuration](#example-nginx-configuration)
-- [Hosting behind Nginx Proxy Manager (NPM)](#hosting-behind-nginx-proxy-manager-npm)
-- [Updating Obsidian](#updating-obsidian)
-- [Building locally](#building-locally)
-- [Copy/Paste From External Source](#copypaste-from-external-source)
+  - [Custom Fonts](#custom-fonts)
+- [Usage Tips](#usage-tips)
+  - [Reloading Obsidian](#reloading-obsidian)
+  - [Copy/Paste](#copypaste)
+  - [User Permissions](#user-permissions)
+- [Building Locally](#building-locally)
+- [Troubleshooting](#troubleshooting)
 
-## Using the Container
+## 🚀 Quick Start
 
-### Windows based path
-To run a interactive version to test it out:
+### Local Development
 
-```PowerShell
-docker run --rm -it `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -p 8080:8080 `
-  ghcr.io/sytone/obsidian-remote:latest
-```
-
-To run it as a daemon in the background:
-
-```PowerShell
-docker run -d `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -p 8080:8080 `
-  ghcr.io/sytone/obsidian-remote:latest
-```
-
-The ARM container is now avaliable, will look to make this simpler in the future. The ARM imange is on the docker hub and not the github container registry. 
-
-```PowerShell
-docker run -d `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -p 8080:8080 `
-  sytone/obsidian-remote:arm64
-```
-
-### Linux bash paths
-To run a interactive version to test it out:
+For local testing and development without SSL:
 
 ```bash
-mkdir -p ob/{vaults,config}
-docker run --rm -it \
-  -v ./ob/vaults:/vaults \
-  -v ./ob/config:/config \
-  -p 8080:8080 \
-  ghcr.io/sytone/obsidian-remote:latest
-```
+# Clone the repository
+git clone https://github.com/leex279/obsidian-webversion.git
+cd obsidian-webversion
 
-To run it as a daemon in the background:
-
-```bash
-mkdir -p ob/{vaults,config}
-docker run -d \
-  -v ./ob/vaults:/vaults \
-  -v ./ob/config:/config \
-  -p 8080:8080 \
-  ghcr.io/sytone/obsidian-remote:latest
-```
-
-The ARM container is now avaliable, will look to make this simpler in the future. The ARM imange is on the docker hub and not the github container registry. 
-
-```bash
-mkdir -p ob/{vaults,config}
-docker run -d \
-  -v ./ob/vaults:/vaults \
-  -v ./ob/config:/config \
-  -p 8080:8080 \
-  sytone/obsidian-remote:latest
-```
-
-### Ports
-
-| Port  | Description                             |
-| ----- | --------------------------------------- |
-| 8080  | HTTP Obsidian Web Interface             |
-| 8443  | HTTPS Obsidian Web Interface            |
-
-### Mapped Volumes
-
-| Path      | Description                                                               |
-| --------- | ------------------------------------------------------------------------- |
-| `/vaults` | The location on the host for your Obsidian Vaults                         |
-| `/config` | The location to store Obsidan configuration and ssh data for obsidian-git |
-
-### Environment Variables
-
-| Environment Variable | Description                                                                                                                                                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PUID                 | Set the user ID for the container user. `911` by default.                                                                                                                                                                           |
-| PGID                 | Set the group ID for the continer user. `911` by default.                                                                                                                                                                           |
-| TZ                   | Set the Time Zone for the container, should match your TZ. `Etc/UTC` by default. See [List of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for valid options.                              |
-| DOCKER_MODS          | Use to add mods to the container like git. E.g. `DOCKER_MODS=linuxserver/mods:universal-git` See [Docker Mods](https://github.com/linuxserver/docker-mods) for details.                                                             |
-| INSTALL_PACKAGES     | Use to add package for the container like language pack. E.g. `INSTALL_PACKAGES=fonts-noto-cjk fonts-noto-extra` And the docker mod `linuxserver/mods:universal-package-install` is required.                                       |
-| KEYBOARD             | Used to se the keyboard being used for input. E.g. `KEYBOARD=en-us-qwerty` or `KEYBOARD=de-de-qwertz` a list of other possible values (not tested) can be found at <https://github.com/linuxserver/docker-digikam#keyboard-layouts> |
-| CUSTOM_PORT          | Internal port the container listens on for http if it needs to be swapped from the default 8080.                                                                                                                                    |
-| CUSTOM_HTTPS_PORT    | Internal port the container listens on for https if it needs to be swapped from the default 8443.                                                                                                                                   |
-| CUSTOM_USER          | HTTP Basic auth username, abc is default.                                                                                                                                                                                           |
-| PASSWORD             | HTTP Basic auth password, abc is default. If unset there will be no auth                                                                                                                                                            |
-| SUBFOLDER            | Subfolder for the application if running a subfolder reverse proxy, need both slashes IE `/subfolder/`                                                                                                                              |
-| TITLE                | The page title displayed on the web browser, default "KasmVNC Client".                                                                                                                                                              |
-| FM_HOME              | This is the home directory (landing) for the file manager, default "/config".                                                                                                                                                       |
-
-### Language Support
-
-To show the other languages, add the mod `linuxserver/mods:universal-package-install` and add the language pack. E.g. `INSTALL_PACKAGES=fonts-noto-cjk fonts-noto-extra` to support CJK (Chinese Japanese Korean).
-
-To type other language in the browser you should enable the **IME Input Mode** in the side panel.
-
-![Settings IME Input Mode](./assets/IMEInputMode.png)
-
-## Using Docker Compose
-
-A production-ready `docker-compose.yml` file is provided in the repository root. To use it:
-
-```bash
-# Copy the example environment file and customize it
+# Copy environment template
 cp .env.example .env
-nano .env  # Edit with your preferred editor
 
-# Start the container
+# Edit if needed (optional)
+nano .env
+
+# Build and start
+docker build -t obsidian-remote:local-autorestart .
 docker-compose up -d
 
-# View logs
-docker-compose logs -f
-
-# Stop the container
-docker-compose down
+# Access at http://localhost:8080
 ```
 
-The provided `docker-compose.yml` includes:
-- All environment variables with sensible defaults
-- Health check configuration
-- Production-ready restart policy
-- Commented examples for optional features (git, language support)
+**⚠️ Warning:** Do not expose port 8080 to the internet without proper security!
 
-**Quick Start Example:**
+### Production Deployment
 
-```yaml
-services:
-  obsidian:
-    image: 'ghcr.io/sytone/obsidian-remote:latest'
-    container_name: obsidian-remote
-    restart: unless-stopped
-    ports:
-      - 8080:8080
-      - 8443:8443
-    volumes:
-      - ./vaults:/vaults
-      - ./config:/config
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Los_Angeles
-      - DOCKER_MODS=linuxserver/mods:universal-git
-```
-
-See the `docker-compose.yml` file for all available options and the `.env.example` file for environment variable documentation.
-
-## Production Deployment with Caddy SSL
-
-For production deployments with automatic HTTPS and custom domain support, use the included Caddy reverse proxy configuration.
-
-**Features:**
-- Automatic Let's Encrypt SSL certificates
-- Automatic HTTP to HTTPS redirect
-- WebSocket support for KasmVNC
-- Zero-configuration certificate renewal
-- Production-ready security headers
-
-**Quick Start:**
+For production with **automatic HTTPS** and custom domain:
 
 ```bash
+# Clone the repository
+git clone https://github.com/leex279/obsidian-webversion.git
+cd obsidian-webversion
+
+# Build the image
+docker build -t obsidian-remote:local-autorestart .
+
 # Copy production environment template
 cp .env.production.example .env
 
-# Edit with your domain and email
+# Configure your domain and email
 nano .env
-
-# Deploy with Caddy reverse proxy
-docker-compose -f docker-compose.production.yml up -d
 ```
 
-**Prerequisites:**
-- Custom domain with DNS A record pointing to your server
-- Ports 80 and 443 accessible from the internet
-- Valid email address for Let's Encrypt registration
-
-**Important:** Configure DNS BEFORE starting Caddy to avoid Let's Encrypt rate limits.
-
-See the [Production Deployment Guide](docs/production-deployment.md) for comprehensive setup instructions, DNS configuration, troubleshooting, and security recommendations.
-
-**Example configuration:**
-
-Your domain: `obsidian.example.com`
+Edit `.env` with your settings:
 ```bash
-# .env file
 DOMAIN=obsidian.example.com
 CADDY_EMAIL=admin@example.com
 ```
 
-After deployment, access your Obsidian instance securely at `https://obsidian.example.com` with automatic SSL!
+**Prerequisites:**
+- ✅ Custom domain with DNS A record pointing to your server
+- ✅ Ports 80 and 443 accessible from the internet
+- ✅ Valid email address for Let's Encrypt
 
-## Enabling GIT for the obsidian-git plugin
+**Deploy:**
+```bash
+# Start production stack with Caddy reverse proxy
+docker-compose -f docker-compose.production.yml up -d
 
-This container uses the base images from linuxserver.io. This means you can the linuxserver.io mods. To add support for git add the `DOCKER_MODS` environment variable like so `DOCKER_MODS=linuxserver/mods:universal-git`.
-
-### Docker CLI example
-
-```PowerShell
-docker run -d `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -p 8080:8080 `
-  -e DOCKER_MODS=linuxserver/mods:universal-git `
-  ghcr.io/sytone/obsidian-remote:latest
+# Monitor SSL certificate issuance
+docker-compose -f docker-compose.production.yml logs -f caddy
 ```
 
-## Reloading Obsidan in the Browser
+Access securely at `https://obsidian.example.com` 🎉
 
-If you make changes to plugins or do updates that need to have obsidian restarted, instead of having to stop and start the docker container you can just close the Obsidian UI and right click to show the menus and reopen it. Here is a short clip showing how to do it.
+**📖 For detailed production setup, DNS configuration, and troubleshooting, see:**
+**[Production Deployment Guide](docs/production-deployment.md)**
 
-![Reloading Obsidian in the Browser](./assets/ReloadExample.gif)
+## ⚙️ Configuration
 
-## Setting PUID and PGID
+### Environment Variables
 
-To set PUID and PGID use the follow environment variables on the command line, by default the IDs are 911/911
+#### Core Settings
 
-```PowerShell
-docker run --rm -it `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -e PUID=1000 `
-  -e PGID=1000 `
-  -p 8080:8080 `
-  ghcr.io/sytone/obsidian-remote:latest
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PUID` | `1000` | User ID for file permissions (run `id $USER`) |
+| `PGID` | `1000` | Group ID for file permissions |
+| `TZ` | `Etc/UTC` | Timezone ([List of timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)) |
+
+#### Web Interface
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CUSTOM_PORT` | `8080` | HTTP port (internal) |
+| `CUSTOM_HTTPS_PORT` | `8443` | HTTPS port (internal) |
+| `CUSTOM_USER` | - | HTTP Basic auth username (optional) |
+| `PASSWORD` | - | HTTP Basic auth password (optional) |
+| `TITLE` | `KasmVNC Client` | Browser window title |
+| `FM_HOME` | `/vaults` | File manager home directory |
+
+#### Optional Features
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `DOCKER_MODS` | `linuxserver/mods:universal-git` | Add functionality via [LinuxServer mods](https://github.com/linuxserver/docker-mods) |
+| `INSTALL_PACKAGES` | `fonts-noto-cjk` | Install additional packages (requires package-install mod) |
+| `KEYBOARD` | `en-us-qwerty` | Keyboard layout ([Available layouts](https://github.com/linuxserver/docker-digikam#keyboard-layouts)) |
+
+#### Production Only (Caddy SSL)
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `DOMAIN` | `obsidian.example.com` | Your custom domain (no http://) |
+| `CADDY_EMAIL` | `admin@example.com` | Email for Let's Encrypt notifications |
+
+### Volumes
+
+| Path | Description |
+|------|-------------|
+| `/vaults` | Your Obsidian vaults (notes and files) |
+| `/config` | Obsidian configuration and SSH keys for git |
+
+## 📚 Features Guide
+
+### Git Integration
+
+Enable Git support for the [obsidian-git](https://github.com/denolehov/obsidian-git) plugin:
+
+**In `.env` file:**
+```bash
+DOCKER_MODS=linuxserver/mods:universal-git
 ```
 
-Or, if you use docker-compose, add them to the environment: section:
-
+**Or in `docker-compose.yml`:**
 ```yaml
 environment:
-  - PUID=1000
-  - PGID=1000
+  - DOCKER_MODS=linuxserver/mods:universal-git
 ```
 
-It is most likely that you will use the id of yourself, which can be obtained by running the command below. The two values you will be interested in are the uid and gid.
+SSH keys are stored in `/config/.ssh` for GitHub/GitLab authentication.
 
-```powershell
-id $user
+### Language Support
+
+#### CJK (Chinese, Japanese, Korean)
+
+Install CJK fonts for proper character display:
+
+```bash
+DOCKER_MODS=linuxserver/mods:universal-package-install
+INSTALL_PACKAGES=fonts-noto-cjk fonts-noto-extra
 ```
 
-## Adding missing fonts
+**Enable IME Input:**
+1. Click the side panel in the browser interface
+2. Enable **IME Input Mode**
 
-Thanks to @aaron-jang for this example.
+![IME Input Mode](./assets/IMEInputMode.png)
 
-Download the font of the language that you want to use in Obsidian and add it to the volume as shown below.
+### Custom Fonts
 
-### Map font file using Docker CLI
+Add custom fonts by mounting them as volumes:
 
-```PowerShell
-  -v {downloaded font directory}:/usr/share/fonts/truetype/{font name}
-```
-
-### Map font file using Docker Compose
-
-```PowerShell
-    volumes:
-      - {downloaded font directory}:/usr/share/fonts/truetype/{font name}
-```
-
-## Hosting behind a reverse proxy
-
-If you wish to do that **please make sure you are securing it in some way!**. You also need to ensure **websocket** support is enabled.
-
-### Example nginx configuration
-
-This is an example, I recommend a SSL based proxy and some sort of authentication.
-
-```
-server {
-  set $forward_scheme http;
-  set $server         "10.10.10.10";
-  set $port           8080;
-
-  listen 80;
-  server_name ob.mycooldomain.com;
-  proxy_set_header Upgrade $http_upgrade;
-  proxy_set_header Connection $http_connection;
-  proxy_http_version 1.1;
-  access_log /data/logs/ob_access.log proxy;
-  error_log /data/logs/ob_error.log warn;
-  location / {
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection $http_connection;
-    proxy_http_version 1.1;
-    # Proxy!
-    add_header       X-Served-By $host;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Scheme $scheme;
-    proxy_set_header X-Forwarded-Proto  $scheme;
-    proxy_set_header X-Forwarded-For    $remote_addr;
-    proxy_set_header X-Real-IP          $remote_addr;
-    proxy_pass       $forward_scheme://$server:$port$request_uri;
-  }
-}
-```
-
-## Hosting behind Nginx Proxy Manager (NPM)
-
-Thanks to @fahrenhe1t for this example.
-
-If you install obsidian-remote in Docker, you can proxy it through [Nginx Proxy Manager](https://nginxproxymanager.com/) (NPM - running on the same Docker instance), and use an access list to provide user authentication. The obsidian-remote container would have to be on the same network as Nginx Proxy Manager. If you don't expose the IP external to the container, authentication would be forced through NPM:
-
+**Docker Compose:**
 ```yaml
-services:
-  obsidian:
-    image: 'ghcr.io/sytone/obsidian-remote:latest'
-    container_name: obsidian-remote
-    restart: unless-stopped
-    ports:
-      - 8080 #only exposes port internally to the container
-    volumes:
-      - /home/obsidian/vaults:/vaults
-      - /home/obsidian/config:/config
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/Los_Angeles
-      - DOCKER_MODS=linuxserver/mods:universal-git
-networks:
-  default:
-    name: <your nginx proxy manager network>
-    external: true
+volumes:
+  - ./vaults:/vaults
+  - ./config:/config
+  - ./fonts/MyFont:/usr/share/fonts/truetype/myfont
 ```
 
-Create a proxy host in NPM pointing to the "obsidian-remote:8080" container, choose your domain name, use a LetsEncrypt SSL certificate, enable WebSockets. This video talks about it: [Nginx Proxy Manager - ACCESS LIST protection for internal services](https://www.youtube.com/watch?v=G9voYZejH48)
+## 💡 Usage Tips
 
-## Updating Obsidian
+### Reloading Obsidian
 
-By default obsidian will update itself in the container. If you recreate the container you will have to do the update again. This repo will be updated periodically to keep up with the latest version of Obsidian.
+No need to restart the container! Just reload Obsidian in the browser:
 
-## Building locally
+1. Close the Obsidian window
+2. Right-click to show the menu
+3. Reopen Obsidian
 
-To build and use it locally run the following commands:
+![Reload Example](./assets/ReloadExample.gif)
 
-```PowerShell
-docker build --pull --rm `
-  -f "Dockerfile" `
-  -t obsidian-remote:latest `
-  "."
+### Copy/Paste
+
+Access the clipboard for copying/pasting from external sources:
+
+1. Click the circle icon on the left side of the browser window
+2. Use the textbox to update or copy from the remote clipboard
+
+![Clipboard](https://user-images.githubusercontent.com/1399443/202805847-a87e2c7c-a5c6-4dea-bbae-4b25b4b5866a.png)
+
+### User Permissions
+
+Match container user to your host user to avoid permission issues:
+
+```bash
+# Get your user and group IDs
+id $USER
+
+# Set in .env file
+PUID=1000  # Your uid
+PGID=1000  # Your gid
 ```
 
-To run the localy build image:
+## 🔨 Building Locally
 
-```PowerShell
-docker run --rm -it `
-  -v D:/ob/vaults:/vaults `
-  -v D:/ob/config:/config `
-  -p 8080:8080 `
-  obsidian-remote:latest bash
+Build the Docker image from source:
+
+```bash
+# Build the image
+docker build --pull --rm -f "Dockerfile" -t obsidian-remote:local-autorestart .
+
+# Run with docker-compose
+docker-compose up -d
+
+# Or run directly
+docker run -d \
+  -v ./vaults:/vaults \
+  -v ./config:/config \
+  -p 8080:8080 \
+  obsidian-remote:local-autorestart
 ```
 
+## 🛠️ Troubleshooting
 
-## Copy/Paste From External Source
+### Common Issues
 
-Click on the circle to the left side of your browser window. In there you will find a textbox for updating the remote clipboard or copying from it.
+**Cannot access on port 8080:**
+- Check container is running: `docker-compose ps`
+- View logs: `docker-compose logs -f`
+- Ensure port is not in use: `netstat -tulpn | grep 8080`
 
-![image](https://user-images.githubusercontent.com/1399443/202805847-a87e2c7c-a5c6-4dea-bbae-4b25b4b5866a.png)
+**Permission errors on files:**
+- Set correct PUID/PGID matching your user: `id $USER`
+- Fix ownership: `sudo chown -R 1000:1000 vaults/ config/`
 
+**Fonts not showing:**
+- Install font packages with `INSTALL_PACKAGES`
+- Or mount font directory to `/usr/share/fonts/truetype/`
 
+**Production SSL issues:**
+- See detailed troubleshooting in [Production Deployment Guide](docs/production-deployment.md)
+- Verify DNS: `dig +short your-domain.com`
+- Check Caddy logs: `docker-compose -f docker-compose.production.yml logs caddy`
 
+### Updates
+
+Obsidian updates automatically inside the container. To update the base image:
+
+```bash
+# Rebuild the image
+docker build --pull --rm -f "Dockerfile" -t obsidian-remote:local-autorestart .
+
+# Recreate containers
+docker-compose up -d --force-recreate
+
+# Or for production
+docker-compose -f docker-compose.production.yml up -d --force-recreate
+```
+
+## 📄 License
+
+This project builds upon the excellent work from [sytone/obsidian-remote](https://github.com/sytone/obsidian-remote).
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
+
+## ⭐ Acknowledgments
+
+- [Obsidian.md](https://obsidian.md/) - The amazing note-taking application
+- [LinuxServer.io](https://www.linuxserver.io/) - For the excellent base images
+- [Caddy](https://caddyserver.com/) - For automatic HTTPS made simple
+- Original [obsidian-remote](https://github.com/sytone/obsidian-remote) by sytone
